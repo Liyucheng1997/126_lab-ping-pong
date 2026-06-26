@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>乒乓球机器人对打仿真</title>
+  </head>
+  <body>
+    <canvas id="scene"></canvas>
+    <main class="hud" aria-label="机器人状态面板">
+      <section class="brand-panel">
+        <p class="eyebrow">Vision-Guided Table Tennis Robotics</p>
+        <h1>架式乒乓球机器人对打</h1>
+        <p>
+          高速相机检测球位，轨迹预测模块估算击球点，横向与竖向滑台实时移动球拍完成回球。
+        </p>
+      </section>
+      <section class="control-panel" aria-label="显示控制">
+        <label>
+          <input id="togglePrediction" type="checkbox" checked />
+          <span>预测轨迹</span>
+        </label>
+        <label>
+          <input id="toggleVision" type="checkbox" checked />
+          <span>相机可视化</span>
+        </label>
+      </section>
+      <section class="score-panel" aria-label="比赛计分">
+        <div class="score-row">
+          <article>
+            <span>LEFT</span>
+            <strong id="leftScore">0</strong>
+            <small id="leftGames">G 0</small>
+          </article>
+          <article>
+            <span>RIGHT</span>
+            <strong id="rightScore">0</strong>
+            <small id="rightGames">G 0</small>
+          </article>
+        </div>
+        <p><span id="serverLabel">LEFT SERVE</span> · <span id="rallyMessage">READY</span></p>
+      </section>
+      <section class="telemetry">
+        <article>
+          <span>LEFT BOT</span>
+          <strong id="leftState">TRACKING</strong>
+        </article>
+        <article>
+          <span>BALL SPEED</span>
+          <strong id="ballSpeed">0.0 m/s</strong>
+        </article>
+        <article>
+          <span>RIGHT BOT</span>
+          <strong id="rightState">TRACKING</strong>
+        </article>
+      </section>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
