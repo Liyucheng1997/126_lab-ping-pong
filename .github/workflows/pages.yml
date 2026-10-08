@@ -19,6 +19,7 @@ jobs:
         with:
           node-version: 20
       - run: npm install
+      - run: npm test
       - run: npx vite build --base=./
       - uses: actions/upload-pages-artifact@v3
         with:

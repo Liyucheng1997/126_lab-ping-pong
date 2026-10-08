@@ -4,56 +4,126 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>乒乓球机器人对打仿真</title>
+    <meta
+      name="description"
+      content="两台五轴龙门乒乓球机器人在 ITTF 标准球台上对打：1 kHz 气动与碰撞仿真、200 fps 双目视觉、9 维 EKF、拦截与回球规划、伺服动力学。"
+    />
   </head>
   <body>
     <canvas id="scene"></canvas>
-    <main class="hud" aria-label="机器人状态面板">
-      <section class="brand-panel">
-        <p class="eyebrow">Vision-Guided Table Tennis Robotics</p>
-        <h1>架式乒乓球机器人对打</h1>
-        <p>
-          高速相机检测球位，轨迹预测模块估算击球点，横向与竖向滑台实时移动球拍完成回球。
+
+    <main class="hud" aria-label="机器人仿真面板">
+      <header class="brand">
+        <p class="eyebrow">Vision-guided table tennis robotics</p>
+        <h1>龙门乒乓球机器人对打仿真</h1>
+        <p class="subtitle">
+          ITTF 标准球台 · 1 kHz 气动/碰撞仿真 · 200 fps 双目视觉 · 9 维 EKF · 五轴伺服
         </p>
-      </section>
-      <section class="control-panel" aria-label="显示控制">
-        <label>
-          <input id="togglePrediction" type="checkbox" checked />
-          <span>预测轨迹</span>
-        </label>
-        <label>
-          <input id="toggleVision" type="checkbox" checked />
-          <span>相机可视化</span>
-        </label>
-      </section>
-      <section class="score-panel" aria-label="比赛计分">
-        <div class="score-row">
-          <article>
-            <span>LEFT</span>
-            <strong id="leftScore">0</strong>
-            <small id="leftGames">G 0</small>
-          </article>
-          <article>
-            <span>RIGHT</span>
-            <strong id="rightScore">0</strong>
-            <small id="rightGames">G 0</small>
-          </article>
+      </header>
+
+      <section class="scoreboard" aria-label="比分">
+        <div class="team left">
+          <span class="serve-dot" id="serveLeft"></span>
+          <span class="name">LEFT</span>
+          <span class="games" id="gamesLeft">0</span>
+          <strong id="pointsLeft">0</strong>
         </div>
-        <p><span id="serverLabel">LEFT SERVE</span> · <span id="rallyMessage">READY</span></p>
+        <div class="divider">
+          <span id="rallyHits">0</span>
+          <small>拍</small>
+        </div>
+        <div class="team right">
+          <strong id="pointsRight">0</strong>
+          <span class="games" id="gamesRight">0</span>
+          <span class="name">RIGHT</span>
+          <span class="serve-dot" id="serveRight"></span>
+        </div>
+        <p class="call" id="callout">READY</p>
       </section>
-      <section class="telemetry">
-        <article>
-          <span>LEFT BOT</span>
-          <strong id="leftState">TRACKING</strong>
+
+      <button class="panel-toggle" id="panelToggle" aria-expanded="false" aria-controls="controls">控制</button>
+
+      <section class="controls" id="controls" aria-label="控制">
+        <div class="group">
+          <h2>视角</h2>
+          <div class="seg" id="viewButtons">
+            <button data-view="broadcast" class="active">转播</button>
+            <button data-view="side">侧面</button>
+            <button data-view="top">俯视</button>
+            <button data-view="robot">机器人</button>
+            <button data-view="follow">跟球</button>
+          </div>
+        </div>
+        <div class="group">
+          <h2>时间</h2>
+          <div class="seg" id="speedButtons">
+            <button data-speed="1" class="active">1×</button>
+            <button data-speed="0.5">½×</button>
+            <button data-speed="0.25">¼×</button>
+            <button data-speed="0.1">⅒×</button>
+            <button data-speed="0" id="pauseButton">❚❚</button>
+          </div>
+        </div>
+        <div class="group toggles">
+          <h2>可视化</h2>
+          <label><input type="checkbox" data-flag="prediction" checked /><span>预测轨迹</span></label>
+          <label><input type="checkbox" data-flag="plan" checked /><span>击球规划</span></label>
+          <label><input type="checkbox" data-flag="uncertainty" checked /><span>2σ 不确定度</span></label>
+          <label><input type="checkbox" data-flag="vision" checked /><span>相机视锥</span></label>
+          <label><input type="checkbox" data-flag="marks" checked /><span>落点</span></label>
+          <label><input type="checkbox" data-flag="trail" checked /><span>球迹</span></label>
+          <label><input type="checkbox" id="pipToggle" checked /><span>相机画面</span></label>
+        </div>
+        <p class="keys">快捷键：空格 暂停 · 1–5 视角 · S 慢放</p>
+      </section>
+
+      <section class="robots" aria-label="机器人状态">
+        <article class="robot-card" data-side="-1">
+          <header><span class="tag">L</span><span class="mode">READY</span><span class="shot">—</span></header>
+          <dl>
+            <div><dt>击球倒计时</dt><dd class="tth">—</dd></div>
+            <div><dt>拍速</dt><dd class="blade">—</dd></div>
+            <div><dt>估计旋转</dt><dd class="spin">—</dd></div>
+          </dl>
+          <ul class="axes"></ul>
         </article>
-        <article>
-          <span>BALL SPEED</span>
-          <strong id="ballSpeed">0.0 m/s</strong>
-        </article>
-        <article>
-          <span>RIGHT BOT</span>
-          <strong id="rightState">TRACKING</strong>
+        <article class="robot-card" data-side="1">
+          <header><span class="tag">R</span><span class="mode">READY</span><span class="shot">—</span></header>
+          <dl>
+            <div><dt>击球倒计时</dt><dd class="tth">—</dd></div>
+            <div><dt>拍速</dt><dd class="blade">—</dd></div>
+            <div><dt>估计旋转</dt><dd class="spin">—</dd></div>
+          </dl>
+          <ul class="axes"></ul>
         </article>
       </section>
+
+      <section class="telemetry" aria-label="球状态">
+        <div class="readouts">
+          <div><span>球速</span><strong id="ballSpeed">0.0</strong><small>m/s</small></div>
+          <div><span>转速</span><strong id="ballSpin">0</strong><small>rpm</small></div>
+          <div><span>估计误差</span><strong id="estError">—</strong><small>mm</small></div>
+          <div><span>击球精度</span><strong id="hitError">—</strong><small>mm</small></div>
+        </div>
+        <canvas id="chart" width="560" height="120" aria-label="遥测曲线"></canvas>
+        <p class="legend"><i class="c1"></i>球速 <i class="c2"></i>EKF 位置误差 <i class="c3"></i>球高</p>
+      </section>
+
+      <section class="stats" aria-label="比赛统计">
+        <h2>统计</h2>
+        <dl>
+          <div><dt>已打分数</dt><dd id="statPoints">0</dd></div>
+          <div><dt>平均回合</dt><dd id="statMean">—</dd></div>
+          <div><dt>最长回合</dt><dd id="statMax">—</dd></div>
+          <div><dt>仿真速率</dt><dd id="statRate">—</dd></div>
+        </dl>
+        <ul id="statReasons"></ul>
+      </section>
+
+      <figure class="pip" id="pip" aria-label="机器人相机画面">
+        <figcaption><span id="pipLabel">L · STEREO CAM 0</span><span id="pipFps">200 fps</span></figcaption>
+        <canvas id="pipOverlay"></canvas>
+      </figure>
     </main>
     <script type="module" src="/src/main.js"></script>
   </body>
